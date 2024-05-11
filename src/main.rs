@@ -14,6 +14,7 @@ use serde_json::{json, Value}; //serde_json is used to serialize and deserialize
 use std::{collections::HashMap, env::var, format};
 use tokio_postgres::{connect, Client, Error, NoTls}; //tokio is the async runtime and tokio-postgres is the async postgres driver //std is the standard library
 
+
 //UTILITY & HANDLER FUNCTIONS
 
 //UTILITIES
@@ -31,7 +32,9 @@ async fn _return_plain_text() -> &'static str {
 async fn _return_json() -> Json<Value> {
     Json(json!({ "data": 42 }))
 }
-
+// This function buffers the request body and returns it. If the body is not valid UTF-8, it returns a `400 Bad Request`.
+// `Bytes` gives you the raw request body as a `Bytes` instance - this works because 'Bytes' implements FromRequest and therefore can be used as an extractor.
+// 'String' and 'StatusCode' both implement 'IntoResponse' and therefore can be used as a response.
 async fn _echo(body: Bytes) -> Result<String, StatusCode> {
     if let Ok(string) = String::from_utf8(body.to_vec()) {
         Ok(string)
@@ -39,6 +42,7 @@ async fn _echo(body: Bytes) -> Result<String, StatusCode> {
         Err(StatusCode::BAD_REQUEST)
     }
 }
+
 #[derive(Debug, Serialize, Deserialize)]
 struct User {
     id: i32,
@@ -59,6 +63,7 @@ impl From<&tokio_postgres::Row> for User {
 }
 
 //MAIN FUNCTION
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     //LOAD ENVIRONMENT VARIABLES
