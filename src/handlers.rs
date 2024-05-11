@@ -1,13 +1,14 @@
+use crate::db::get_user_by_id;
+use crate::models::User;
 use axum::{
     //axum is the http server framework
     body::{Body, Bytes},
     extract::{Json, Path, Query},
     http::StatusCode,
+    Extension,
 };
 use serde_json::{json, Value};
 use std::{collections::HashMap, sync::Arc};
-
-use crate::models::User;
 use tokio_postgres::Client;
 // `&'static str` becomes a `200 OK` with `content-type: text/plain; charset=utf-8`
 pub async fn _return_plain_text() -> &'static str {
@@ -51,6 +52,17 @@ pub async fn get_all_users(client: Arc<Client>) -> Result<Json<Value>, axum::res
                 .body(body)
                 .unwrap())
         }
+    }
+}
+
+pub async fn get_user(
+    Path(user_id): Path<i32>,
+    Extension(client): Extension<Arc<Client>>,
+) -> Result<Json<User>, StatusCode> {
+    match get_user_by_id(&client, user_id).await {
+        Ok(Some(row)) => Ok(Json(User::from(&row))),
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
 
