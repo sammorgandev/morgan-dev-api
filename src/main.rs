@@ -11,7 +11,7 @@ use axum::{
 use serde_json::{json, Value};
 
 //standard library
-use std::{collections::HashMap, format, string};
+use std::{collections::HashMap, format};
 
 //UTILITY & HANDLER FUNCTIONS
 
@@ -35,7 +35,9 @@ async fn _return_plain_text() -> &'static str {
 async fn _return_json() -> Json<Value> {
     Json(json!({ "data": 42 }))
 }
-
+// This function buffers the request body and returns it. If the body is not valid UTF-8, it returns a `400 Bad Request`.
+// `Bytes` gives you the raw request body as a `Bytes` instance - this works because 'Bytes' implements FromRequest and therefore can be used as an extractor.
+// 'String' and 'StatusCode' both implement 'IntoResponse' and therefore can be used as a response.
 async fn _echo(body: Bytes) -> Result<String, StatusCode> {
     if let Ok(string) = String::from_utf8(body.to_vec()) {
         Ok(string)
@@ -43,6 +45,7 @@ async fn _echo(body: Bytes) -> Result<String, StatusCode> {
         Err(StatusCode::BAD_REQUEST)
     }
 }
+
 #[tokio::main]
 async fn main() {
     let app = Router::new()
