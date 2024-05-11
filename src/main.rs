@@ -7,10 +7,12 @@ use axum::{
     routing::get,
     Router,
 };
-use dotenv::dotenv; //dotenv is used to load environment variables from a .env file
+use dotenv::dotenv;
+use serde::{Deserialize, Serialize};
+//dotenv is used to load environment variables from a .env file
 use serde_json::{json, Value}; //serde_json is used to serialize and deserialize JSON
 use std::{collections::HashMap, env::var, format};
-use tokio_postgres::{connect, Error, NoTls}; //tokio is the async runtime and tokio-postgres is the async postgres driver //std is the standard library
+use tokio_postgres::{connect, Client, Error, NoTls}; //tokio is the async runtime and tokio-postgres is the async postgres driver //std is the standard library
 
 //UTILITY & HANDLER FUNCTIONS
 
@@ -37,6 +39,26 @@ async fn _echo(body: Bytes) -> Result<String, StatusCode> {
         Err(StatusCode::BAD_REQUEST)
     }
 }
+#[derive(Debug, Serialize, Deserialize)]
+struct User {
+    id: i32,
+    name: String,
+    email: String,
+    password: String,
+}
+
+impl From<&tokio_postgres::Row> for User {
+    fn from(row: &tokio_postgres::Row) -> Self {
+        User {
+            id: row.get("id"),
+            name: row.get("name"),
+            email: row.get("email"),
+            password: row.get("password"),
+        }
+    }
+}
+
+//MAIN FUNCTION
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     //LOAD ENVIRONMENT VARIABLES
@@ -64,12 +86,26 @@ async fn main() -> Result<(), Error> {
         }
     });
 
-    // Now we can execute a simple statment that just returns its parameter
-    let rows = client.query("SELECT $1::TEXT", &[&"hello world"]).await?;
+    let create_user_table_sql = "
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        )";
 
-    // And then check that we got back the same string we sent over
-    let value: &str = rows[0].get(0);
-    assert_eq!(value, "hello world");
+    client.execute(create_user_table_sql, &[]).await?;
+
+    let create_user = client
+        .prepare("INSERT INTO users (name, email, password) VALUES ($1, $2, $3)")
+        .await?;
+
+    client
+        .execute(
+            &create_user,
+            &[&"Sam Morgan", &"sam@morgan.dev", &"password"],
+        )
+        .await?;
 
     //DEFINE ROUTES
     let app = Router::new()
@@ -81,11 +117,18 @@ async fn main() -> Result<(), Error> {
             }),
         )
         .route("/plain", get(_return_plain_text))
-        .route("/json", get(_return_json));
+        .route("/users", get(get_all_users(&client).await?));
 
     //START SERVER
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
 
     Ok(())
+}
+
+//CUSTOM HANDLERS
+async fn get_all_users(client: &Client) -> Result<Json<Value>, tokio_postgres::Error> {
+    let rows = client.query("SELECT * FROM users", &[]).await?;
+    let users: Vec<User> = rows.iter().map(User::from).collect(); // assuming you have a User struct and a from function to convert a row to a User
+    Ok(Json(json!(users)))
 }
