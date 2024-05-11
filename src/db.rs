@@ -30,3 +30,19 @@ pub async fn get_db_client() -> Result<Client, Error> {
 
     Ok(client)
 }
+
+pub async fn _create_user_table() -> Result<(), Error> {
+    let client = get_db_client().await?;
+    client
+        .execute(
+            "CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            password TEXT NOT NULL
+        )",
+            &[],
+        )
+        .await?;
+    Ok(())
+}
