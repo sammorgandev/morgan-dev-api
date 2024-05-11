@@ -7,7 +7,7 @@ pub struct User {
     pub id: i32,
     pub name: String,
     pub email: String,
-    pub password: String,
+    pub password: Option<String>,
 }
 
 impl User {
@@ -15,13 +15,13 @@ impl User {
         id: i32,
         name: String,
         email: String,
-        password: String,
+        password: Option<String>,
         client: Arc<Client>,
     ) -> Result<Self, tokio_postgres::Error> {
         client
             .execute(
                 "INSERT INTO users (id, name, email, password) VALUES ($1, $2, $3, $4)",
-                &[&id, &name, &email, &password],
+                &[&id, &name, &email, &password.as_deref()],
             )
             .await?;
 
@@ -40,7 +40,7 @@ impl From<&tokio_postgres::Row> for User {
             id: row.get("id"),
             name: row.get("name"),
             email: row.get("email"),
-            password: row.get("password"),
+            password: row.try_get("password").ok(),
         }
     }
 }

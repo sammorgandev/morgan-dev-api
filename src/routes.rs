@@ -1,5 +1,7 @@
+use crate::handlers::get_user;
 use crate::handlers::{add_new_user, get_all_users};
 use crate::models::User;
+use axum::Extension;
 use axum::{
     routing::{get, post},
     Json, Router,
@@ -25,5 +27,11 @@ pub fn get_routes(client: Arc<Client>) -> Router {
                     add_new_user(Json(user), client_clone.clone()).await // Clone again for the async block if needed
                 }
             }
-        }))
+        })).route("/users/:id", get({
+            move |path: axum::extract::Path<i32>, extension: Extension<Arc<Client>>| {
+                async move {
+                    get_user(path, extension).await
+                }
+            }
+        })).layer(Extension(client))
 }
