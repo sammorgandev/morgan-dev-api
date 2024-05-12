@@ -2,7 +2,7 @@ use dotenv::dotenv;
 use std::env::var;
 use tokio_postgres::{connect, Client, Error, NoTls};
 
-pub async fn get_db_client() -> Result<Client, Error> {
+pub async fn establish_connection() -> Result<Client, Error> {
     //LOAD ENVIRONMENT VARIABLES
     dotenv().ok();
 
@@ -29,19 +29,4 @@ pub async fn get_db_client() -> Result<Client, Error> {
     });
 
     Ok(client)
-}
-
-pub async fn _create_user_table(client: &Client) -> Result<(), Error> {
-    client
-        .execute(
-            "CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL,
-            password TEXT NOT NULL
-        )",
-            &[],
-        )
-        .await?;
-    Ok(())
 }
