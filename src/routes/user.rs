@@ -54,3 +54,4 @@ pub fn get_routes(client: Arc<Client>) -> Router {
         })).route("/health", get(|| async { "Healthy"
         })).layer(Extension(client))
 }
+
