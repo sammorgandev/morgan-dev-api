@@ -11,6 +11,7 @@ pub struct User {
 }
 
 impl User {
+    //crud functions
     pub async fn new(
         id: i32,
         name: String,
@@ -32,10 +33,49 @@ impl User {
             password,
         })
     }
-}
 
-impl From<&tokio_postgres::Row> for User {
-    fn from(row: &tokio_postgres::Row) -> Self {
+    pub async fn update(
+        client: Arc<Client>,
+        id: i32,
+        name: String,
+        email: String,
+        password: Option<String>,
+    ) -> Result<(), tokio_postgres::Error> {
+        client
+            .execute(
+                "UPDATE users SET name = $1, email = $2, password = $3 WHERE id = $4",
+                &[&name, &email, &password.as_deref(), &id],
+            )
+            .await?;
+        Ok(())
+    }
+
+    pub async fn delete(client: Arc<Client>, id: i32) -> Result<(), tokio_postgres::Error> {
+        client
+            .execute("DELETE FROM users WHERE id = $1", &[&id])
+            .await?;
+        Ok(())
+    }
+
+    pub async fn get(client: Arc<Client>, id: i32) -> Result<Option<User>, tokio_postgres::Error> {
+        let row = client
+            .query_opt("SELECT * FROM users WHERE id = $1", &[&id])
+            .await?;
+
+        match row {
+            Some(row) => Ok(Some(User::from(&row))),
+            None => Ok(None),
+        }
+    }
+
+    pub async fn get_all(client: Arc<Client>) -> Result<Vec<User>, tokio_postgres::Error> {
+        let rows = client.query("SELECT * FROM users", &[]).await?;
+        let users: Vec<User> = rows.iter().map(User::from).collect();
+        Ok(users)
+    }
+
+    //convert row to user type (from function)
+    pub fn from(row: &tokio_postgres::Row) -> Self {
         User {
             id: row.get("id"),
             name: row.get("name"),
