@@ -9,7 +9,7 @@ use std::sync::Arc;
 use tokio_postgres::Client;
 
 
-pub fn get_routes(client: Arc<Client>) -> Router {
+pub fn get_user_routes(client: Arc<Client>) -> Router {
     Router::new()
         .route("/", get(|| async { "Hello! You've reached the root directory of api.morgan.dev. This is a private api. Go away." }))
         .route("/users", get({
