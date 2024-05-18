@@ -30,9 +30,14 @@ async fn main() -> Result<(), Error> {
         .merge(get_misc_routes(misc_client))
         .layer(Extension(layer_client));
     //START SERVER
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let api_port = std::env::var("API_PORT").unwrap_or_else(|_| "3000".to_string());
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", api_port))
+        .await
+        .unwrap();
+
+    println!("Server running on port {}", api_port);
+
     axum::serve(listener, app).await.unwrap();
-    println!("Server running on port 3000");
 
     Ok(())
 }
