@@ -9,23 +9,8 @@ pub struct Post {
     pub body: String,
     pub image: String,
     pub tags: Vec<String>,
-}
-
-//create post table if it doesn't exist
-pub async fn create_table(client: Arc<Client>) -> Result<(), tokio_postgres::Error> {
-    client
-        .execute(
-            "CREATE TABLE IF NOT EXISTS posts (
-            id SERIAL PRIMARY KEY,
-            title TEXT NOT NULL,
-            body TEXT NOT NULL,
-            image TEXT NOT NULL,
-            tags TEXT[] NOT NULL
-        )",
-            &[],
-        )
-        .await?;
-    Ok(())
+    pub category: String,
+    pub created_at: i64,
 }
 
 impl Post {
@@ -35,12 +20,14 @@ impl Post {
         body: String,
         image: String,
         tags: Vec<String>,
+        category: String,
+        created_at: i64,
         client: Arc<Client>,
     ) -> Result<Self, tokio_postgres::Error> {
         client
             .execute(
-                "INSERT INTO posts (id, title, body, image, tags) VALUES ($1, $2, $3, $4, $5)",
-                &[&id, &title, &body, &image, &tags],
+                "INSERT INTO posts (id, title, body, image, tags, category, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                &[&id, &title, &body, &image, &tags, &category, &created_at],
             )
             .await?;
 
@@ -50,89 +37,101 @@ impl Post {
             body,
             image,
             tags,
+            category,
+            created_at,
         })
     }
-}
 
-pub async fn update(
-    client: Arc<Client>,
-    id: i32,
-    title: String,
-    body: String,
-    image: String,
-    tags: Vec<String>,
-) -> Result<(), tokio_postgres::Error> {
-    client
+    pub async fn update(
+        client: Arc<Client>,
+        id: i32,
+        title: String,
+        body: String,
+        image: String,
+        tags: Vec<String>,
+        category: String,
+    ) -> Result<(), tokio_postgres::Error> {
+        client
         .execute(
-            "UPDATE posts SET title = $1, body = $2, image = $3, tags = $4 WHERE id = $5",
-            &[&title, &body, &image, &tags, &id],
+            "UPDATE posts SET title = $1, body = $2, image = $3, tags = $4, category = $6 WHERE id = $5",
+            &[&title, &body, &image, &tags, &id, &category],
         )
         .await?;
-    Ok(())
-}
+        Ok(())
+    }
 
-pub async fn delete(client: Arc<Client>, id: i32) -> Result<(), tokio_postgres::Error> {
-    client
-        .execute("DELETE FROM posts WHERE id = $1", &[&id])
-        .await?;
-    Ok(())
-}
+    pub async fn delete(client: Arc<Client>, id: i32) -> Result<(), tokio_postgres::Error> {
+        client
+            .execute("DELETE FROM posts WHERE id = $1", &[&id])
+            .await?;
+        Ok(())
+    }
 
-pub async fn get(client: Arc<Client>, id: i32) -> Result<Option<Post>, tokio_postgres::Error> {
-    let row = client
-        .query_opt("SELECT * FROM posts WHERE id = $1", &[&id])
-        .await?;
+    pub async fn get(client: Arc<Client>, id: i32) -> Result<Option<Post>, tokio_postgres::Error> {
+        let row = client
+            .query_opt("SELECT * FROM posts WHERE id = $1", &[&id])
+            .await?;
 
-    match row {
-        Some(row) => {
+        match row {
+            Some(row) => {
+                let id: i32 = row.get(0);
+                let title: String = row.get(1);
+                let body: String = row.get(2);
+                let image: String = row.get(3);
+                let tags: Vec<String> = row.get(4);
+                let category: String = row.get(5);
+                let created_at: i64 = row.get(6);
+
+                Ok(Some(Post {
+                    id,
+                    title,
+                    body,
+                    image,
+                    tags,
+                    category,
+                    created_at,
+                }))
+            }
+            None => Ok(None),
+        }
+    }
+
+    pub async fn get_all(client: Arc<Client>) -> Result<Vec<Post>, tokio_postgres::Error> {
+        let rows = client.query("SELECT * FROM posts", &[]).await?;
+
+        let mut posts = Vec::new();
+
+        for row in rows {
             let id: i32 = row.get(0);
             let title: String = row.get(1);
             let body: String = row.get(2);
             let image: String = row.get(3);
             let tags: Vec<String> = row.get(4);
+            let category: String = row.get(5);
+            let created_at: i64 = row.get(6);
 
-            Ok(Some(Post {
+            posts.push(Post {
                 id,
                 title,
                 body,
                 image,
                 tags,
-            }))
+                category,
+                created_at,
+            });
         }
-        None => Ok(None),
+
+        Ok(posts)
     }
 }
-
-pub async fn get_all(client: Arc<Client>) -> Result<Vec<Post>, tokio_postgres::Error> {
-    let rows = client.query("SELECT * FROM posts", &[]).await?;
-
-    let mut posts = Vec::new();
-
-    for row in rows {
-        let id: i32 = row.get(0);
-        let title: String = row.get(1);
-        let body: String = row.get(2);
-        let image: String = row.get(3);
-        let tags: Vec<String> = row.get(4);
-
-        posts.push(Post {
-            id,
-            title,
-            body,
-            image,
-            tags,
-        });
-    }
-
-    Ok(posts)
-}
-
-pub fn from(row: &tokio_postgres::Row) -> Post {
+pub fn _from(row: &tokio_postgres::Row) -> Post {
     let id: i32 = row.get(0);
     let title: String = row.get(1);
     let body: String = row.get(2);
     let image: String = row.get(3);
     let tags: Vec<String> = row.get(4);
+    let category: String = row.get(5);
+    let created_at: i64 = row.get(6);
 
     Post {
         id,
@@ -140,5 +139,7 @@ pub fn from(row: &tokio_postgres::Row) -> Post {
         body,
         image,
         tags,
+        category,
+        created_at,
     }
 }
