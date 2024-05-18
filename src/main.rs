@@ -32,6 +32,7 @@ async fn main() -> Result<(), Error> {
     //START SERVER
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+    println!("Server running on port 3000");
 
     Ok(())
 }

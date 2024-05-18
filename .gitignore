@@ -1,1 +1,6 @@
 /target
+./.devcontainer
+./.devcontainer/devcontainer.json
+./.devcontainer/Dockerfile
+./.devcontainer/docker-compose.yml
+./.devcontainer/.env

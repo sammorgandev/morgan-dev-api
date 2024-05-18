@@ -47,9 +47,9 @@ pub async fn add_post(
         post.id,
         post.title,
         post.body,
-        post.image,
-        post.tags,
-        post.category,
+        Some(post.image.unwrap()),
+        Some(post.tags.unwrap()),
+        Some(post.category.unwrap()),
         post.created_at,
         client,
     )
@@ -101,9 +101,9 @@ pub async fn update_post(
         post_id,
         post.title,
         post.body,
-        post.image,
-        post.tags,
-        post.category,
+        post.image.unwrap(),
+        post.tags.unwrap(),
+        post.category.unwrap(),
     )
     .await
     {

@@ -28,7 +28,7 @@ pub async fn establish_connection() -> Result<Client, Error> {
         }
     });
 
-    println!("{}", database_url);
+    println!("Connected to database");
 
     Ok(client)
 }

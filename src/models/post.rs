@@ -1,5 +1,7 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tokio_postgres::types::ToSql;
 use tokio_postgres::Client;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -7,10 +9,10 @@ pub struct Post {
     pub id: i64,
     pub title: String,
     pub body: String,
-    pub image: String,
-    pub tags: Vec<String>,
-    pub category: String,
-    pub created_at: i64,
+    pub image: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub category: Option<String>,
+    pub created_at: DateTime<Utc>,
 }
 
 impl Post {
@@ -18,16 +20,16 @@ impl Post {
         id: i64,
         title: String,
         body: String,
-        image: String,
-        tags: Vec<String>,
-        category: String,
-        created_at: i64,
+        image: Option<String>,
+        tags: Option<Vec<String>>,
+        category: Option<String>,
+        created_at: DateTime<Utc>,
         client: Arc<Client>,
     ) -> Result<Self, tokio_postgres::Error> {
         client
             .execute(
                 "INSERT INTO posts (id, title, body, image, tags, category, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-                &[&id, &title, &body, &image, &tags, &category, &created_at],
+                &[&id, &title, &body, &image, &tags, &category, &created_at as &(dyn ToSql + Sync)],
             )
             .await?;
 
@@ -35,9 +37,9 @@ impl Post {
             id: id.into(),
             title,
             body,
-            image,
-            tags,
-            category,
+            image: image.clone(),
+            tags: tags.clone(),
+            category: category.clone(),
             created_at,
         })
     }
@@ -75,20 +77,20 @@ impl Post {
         match row {
             Some(row) => {
                 let id: i64 = row.get(0);
-                let title: String = row.get(1);
-                let body: String = row.get(2);
-                let image: String = row.get(3);
-                let tags: Vec<String> = row.get(4);
-                let category: String = row.get(5);
-                let created_at: i64 = row.get(6);
+                let title: String = row.get(2);
+                let body: String = row.get(3);
+                let image: Option<String> = row.get(4);
+                let tags: Option<Vec<String>> = row.get(5);
+                let category: Option<String> = row.get(6);
+                let created_at: DateTime<Utc> = row.get(1);
 
                 Ok(Some(Post {
                     id,
                     title,
                     body,
-                    image,
-                    tags,
-                    category,
+                    image: image.clone(),
+                    tags: tags.clone(),
+                    category: category.clone(),
                     created_at,
                 }))
             }
@@ -103,43 +105,44 @@ impl Post {
 
         for row in rows {
             let id: i64 = row.get(0);
-            let title: String = row.get(1);
-            let body: String = row.get(2);
-            let image: String = row.get(3);
-            let tags: Vec<String> = row.get(4);
-            let category: String = row.get(5);
-            let created_at: i64 = row.get(6);
+            let title: String = row.get(2);
+            let body: String = row.get(3);
+            let image: Option<String> = row.get(4);
+            let tags: Option<Vec<String>> = row.get(5);
+            let category: Option<String> = row.get(6);
+            let created_at: DateTime<Utc> = row.get(1);
 
             posts.push(Post {
                 id,
                 title,
                 body,
-                image,
-                tags,
-                category,
+                image: image.clone(),
+                tags: tags.clone(),
+                category: category.clone(),
                 created_at,
             });
         }
 
         Ok(posts)
     }
-}
-pub fn _from(row: &tokio_postgres::Row) -> Post {
-    let id: i64 = row.get(0);
-    let title: String = row.get(1);
-    let body: String = row.get(2);
-    let image: String = row.get(3);
-    let tags: Vec<String> = row.get(4);
-    let category: String = row.get(5);
-    let created_at: i64 = row.get(6);
 
-    Post {
-        id,
-        title,
-        body,
-        image,
-        tags,
-        category,
-        created_at,
+    pub fn _from(row: &tokio_postgres::Row) -> Post {
+        let id: i64 = row.get(0);
+        let title: String = row.get(2);
+        let body: String = row.get(3);
+        let image: String = row.get(4);
+        let tags: Vec<String> = row.get(5);
+        let category: String = row.get(6);
+        let created_at: DateTime<Utc> = row.get(1);
+
+        Post {
+            id,
+            title,
+            body,
+            image: Some(image),
+            tags: Some(tags),
+            category: Some(category),
+            created_at,
+        }
     }
 }
