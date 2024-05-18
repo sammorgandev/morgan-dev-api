@@ -4,7 +4,7 @@ use tokio_postgres::Client;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Post {
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub body: String,
     pub image: String,
@@ -15,7 +15,7 @@ pub struct Post {
 
 impl Post {
     pub async fn new(
-        id: i32,
+        id: i64,
         title: String,
         body: String,
         image: String,
@@ -32,7 +32,7 @@ impl Post {
             .await?;
 
         Ok(Post {
-            id,
+            id: id.into(),
             title,
             body,
             image,
@@ -44,7 +44,7 @@ impl Post {
 
     pub async fn update(
         client: Arc<Client>,
-        id: i32,
+        id: i64,
         title: String,
         body: String,
         image: String,
@@ -60,21 +60,21 @@ impl Post {
         Ok(())
     }
 
-    pub async fn delete(client: Arc<Client>, id: i32) -> Result<(), tokio_postgres::Error> {
+    pub async fn delete(client: Arc<Client>, id: i64) -> Result<(), tokio_postgres::Error> {
         client
             .execute("DELETE FROM posts WHERE id = $1", &[&id])
             .await?;
         Ok(())
     }
 
-    pub async fn get(client: Arc<Client>, id: i32) -> Result<Option<Post>, tokio_postgres::Error> {
+    pub async fn get(client: Arc<Client>, id: i64) -> Result<Option<Post>, tokio_postgres::Error> {
         let row = client
             .query_opt("SELECT * FROM posts WHERE id = $1", &[&id])
             .await?;
 
         match row {
             Some(row) => {
-                let id: i32 = row.get(0);
+                let id: i64 = row.get(0);
                 let title: String = row.get(1);
                 let body: String = row.get(2);
                 let image: String = row.get(3);
@@ -102,7 +102,7 @@ impl Post {
         let mut posts = Vec::new();
 
         for row in rows {
-            let id: i32 = row.get(0);
+            let id: i64 = row.get(0);
             let title: String = row.get(1);
             let body: String = row.get(2);
             let image: String = row.get(3);
@@ -125,7 +125,7 @@ impl Post {
     }
 }
 pub fn _from(row: &tokio_postgres::Row) -> Post {
-    let id: i32 = row.get(0);
+    let id: i64 = row.get(0);
     let title: String = row.get(1);
     let body: String = row.get(2);
     let image: String = row.get(3);

@@ -29,7 +29,7 @@ pub async fn get_all_posts(client: Arc<Client>) -> Result<Json<Value>, Response>
 }
 
 pub async fn get_post(
-    Path(post_id): Path<i32>,
+    Path(post_id): Path<i64>,
     Extension(client): Extension<Arc<Client>>,
 ) -> Result<Json<Post>, StatusCode> {
     match Post::get(client, post_id).await {
@@ -72,10 +72,10 @@ pub async fn add_post(
 }
 
 pub async fn delete_post(
-    Path(post_id): Path<i32>,
+    Path(post_id): Path<i64>,
     Extension(client): Extension<Arc<Client>>,
 ) -> Result<Json<Value>, axum::response::Response> {
-    match Post::delete(client, post_id).await {
+    match Post::delete(client, post_id.into()).await {
         Ok(_) => {
             let success_message = Json(json!({"message": "Post deleted successfully"}));
             Ok(success_message)
@@ -92,7 +92,7 @@ pub async fn delete_post(
     }
 }
 pub async fn update_post(
-    Path(post_id): Path<i32>,
+    Path(post_id): Path<i64>,
     Extension(client): Extension<Arc<Client>>,
     Json(post): Json<Post>,
 ) -> Result<Json<Value>, Response> {

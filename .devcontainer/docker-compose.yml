@@ -29,6 +29,12 @@ services:
     restart: unless-stopped
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres.faelofqcrrrifprzresr
+      POSTGRES_PASSWORD: 01H34rd207
+      POSTGRES_HOSTNAME: aws-0-us-east-1.pooler.supabase.com
+      POSTGRES_PORT: 5432
     env_file:
         # Ensure that the variables in .env match the same variables in devcontainer.json
         - .env
