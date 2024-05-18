@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use tokio_postgres::Client;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    pub id: i32,
+    pub id: i64,
     pub name: String,
     pub email: String,
     pub password: Option<String>,
@@ -13,7 +13,7 @@ pub struct User {
 impl User {
     //crud functions
     pub async fn new(
-        id: i32,
+        id: i64,
         name: String,
         email: String,
         password: Option<String>,
@@ -36,7 +36,7 @@ impl User {
 
     pub async fn update(
         client: Arc<Client>,
-        id: i32,
+        id: i64,
         name: String,
         email: String,
         password: Option<String>,
@@ -50,14 +50,14 @@ impl User {
         Ok(())
     }
 
-    pub async fn delete(client: Arc<Client>, id: i32) -> Result<(), tokio_postgres::Error> {
+    pub async fn delete(client: Arc<Client>, id: i64) -> Result<(), tokio_postgres::Error> {
         client
             .execute("DELETE FROM users WHERE id = $1", &[&id])
             .await?;
         Ok(())
     }
 
-    pub async fn get(client: Arc<Client>, id: i32) -> Result<Option<User>, tokio_postgres::Error> {
+    pub async fn get(client: Arc<Client>, id: i64) -> Result<Option<User>, tokio_postgres::Error> {
         let row = client
             .query_opt("SELECT * FROM users WHERE id = $1", &[&id])
             .await?;

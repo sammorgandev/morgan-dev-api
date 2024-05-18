@@ -32,7 +32,7 @@ pub async fn get_user(
     Path(user_id): Path<i32>,
     Extension(client): Extension<Arc<Client>>,
 ) -> Result<Json<User>, StatusCode> {
-    match User::get(client, user_id).await {
+    match User::get(client, user_id as i64).await {
         Ok(Some(user)) => Ok(Json(user)),
         Ok(None) => Err(StatusCode::NOT_FOUND),
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
@@ -61,7 +61,7 @@ pub async fn add_user(
 }
 
 pub async fn delete_user(
-    Path(user_id): Path<i32>,
+    Path(user_id): Path<i64>,
     Extension(client): Extension<Arc<Client>>,
 ) -> Result<Json<Value>, axum::response::Response> {
     match User::delete(client, user_id).await {
@@ -81,7 +81,7 @@ pub async fn delete_user(
     }
 }
 pub async fn update_user(
-    Path(user_id): Path<i32>,
+    Path(user_id): Path<i64>,
     Extension(client): Extension<Arc<Client>>,
     name: String,
     email: String,

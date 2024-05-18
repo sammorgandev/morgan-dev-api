@@ -1,36 +1,46 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use tokio_postgres::types::ToSql;
 use tokio_postgres::Client;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Post {
     pub id: i64,
     pub title: String,
-    pub description: String,
+    pub body: String,
     pub image: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub category: Option<String>,
+    pub created_at: DateTime<Utc>,
 }
 
 impl Post {
-    //crud functions
     pub async fn new(
         id: i64,
         title: String,
-        description: String,
+        body: String,
         image: Option<String>,
+        tags: Option<Vec<String>>,
+        category: Option<String>,
+        created_at: DateTime<Utc>,
         client: Arc<Client>,
     ) -> Result<Self, tokio_postgres::Error> {
         client
             .execute(
-                "INSERT INTO posts (id, title, description, image) VALUES ($1, $2, $3, $4)",
-                &[&id, &title, &description, &image.as_deref()],
+                "INSERT INTO posts (id, title, body, image, tags, category, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+                &[&id, &title, &body, &image, &tags, &category, &created_at as &(dyn ToSql + Sync)],
             )
             .await?;
 
         Ok(Post {
-            id,
+            id: id.into(),
             title,
-            description,
-            image,
+            body,
+            image: image.clone(),
+            tags: tags.clone(),
+            category: category.clone(),
+            created_at,
         })
     }
 
@@ -38,15 +48,17 @@ impl Post {
         client: Arc<Client>,
         id: i64,
         title: String,
-        description: String,
-        image: Option<String>,
+        body: String,
+        image: String,
+        tags: Vec<String>,
+        category: String,
     ) -> Result<(), tokio_postgres::Error> {
         client
-            .execute(
-                "UPDATE posts SET title = $1, description = $2, image = $3 WHERE id = $4",
-                &[&title, &description, &image.as_deref(), &id],
-            )
-            .await?;
+        .execute(
+            "UPDATE posts SET title = $1, body = $2, image = $3, tags = $4, category = $6 WHERE id = $5",
+            &[&title, &body, &image, &tags, &id, &category],
+        )
+        .await?;
         Ok(())
     }
 
@@ -63,24 +75,74 @@ impl Post {
             .await?;
 
         match row {
-            Some(row) => Ok(Some(Post::from(&row))),
+            Some(row) => {
+                let id: i64 = row.get(0);
+                let title: String = row.get(2);
+                let body: String = row.get(3);
+                let image: Option<String> = row.get(4);
+                let tags: Option<Vec<String>> = row.get(5);
+                let category: Option<String> = row.get(6);
+                let created_at: DateTime<Utc> = row.get(1);
+
+                Ok(Some(Post {
+                    id,
+                    title,
+                    body,
+                    image: image.clone(),
+                    tags: tags.clone(),
+                    category: category.clone(),
+                    created_at,
+                }))
+            }
             None => Ok(None),
         }
     }
 
     pub async fn get_all(client: Arc<Client>) -> Result<Vec<Post>, tokio_postgres::Error> {
         let rows = client.query("SELECT * FROM posts", &[]).await?;
-        let users: Vec<Post> = rows.iter().map(Post::from).collect();
-        Ok(users)
+
+        let mut posts = Vec::new();
+
+        for row in rows {
+            let id: i64 = row.get(0);
+            let title: String = row.get(2);
+            let body: String = row.get(3);
+            let image: Option<String> = row.get(4);
+            let tags: Option<Vec<String>> = row.get(5);
+            let category: Option<String> = row.get(6);
+            let created_at: DateTime<Utc> = row.get(1);
+
+            posts.push(Post {
+                id,
+                title,
+                body,
+                image: image.clone(),
+                tags: tags.clone(),
+                category: category.clone(),
+                created_at,
+            });
+        }
+
+        Ok(posts)
     }
 
-    //convert row to user type (from function)
-    pub fn from(row: &tokio_postgres::Row) -> Self {
+    pub fn _from(row: &tokio_postgres::Row) -> Post {
+        let id: i64 = row.get(0);
+        let title: String = row.get(2);
+        let body: String = row.get(3);
+        let image: String = row.get(4);
+        let tags: Vec<String> = row.get(5);
+        let category: String = row.get(6);
+        let created_at: DateTime<Utc> = row.get(1);
+
         Post {
-            id: row.get("id"),
-            title: row.get("title"),
-            description: row.get("description"),
-            image: row.try_get("image").ok(),
+            id,
+            title,
+            body,
+            image: Some(image),
+            tags: Some(tags),
+            category: Some(category),
+            created_at,
         }
     }
 }

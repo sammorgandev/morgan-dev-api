@@ -38,21 +38,16 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
                     delete_post(path, extension).await
                 }
             }
-        })).route("/post/:id", put({
+        })).route("/posts/:id", put({
             let client_clone = client.clone(); // Clone for this closure
             move |path: axum::extract::Path<i64>, Json(post): Json<Post>| {
                 let extension = Extension(client_clone);
-                let title = post.title.clone();
-                let description = post.description.clone();
-                let image = post.image.clone();
-                
                 async move {
-                    update_post(path, extension, title, description, image).await
+                    update_post(path, extension, Json(post)).await
                 }
             }
         
-        }))}
-
-                        
+        })).layer(Extension(client))
+}
 
 

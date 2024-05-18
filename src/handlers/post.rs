@@ -43,13 +43,24 @@ pub async fn add_post(
     Json(post): Json<Post>,
     client: Arc<Client>,
 ) -> Result<Json<Value>, axum::response::Response> {
-    match Post::new(post.id, post.title, post.description, post.image, client).await {
+    match Post::new(
+        post.id,
+        post.title,
+        post.body,
+        Some(post.image.unwrap()),
+        Some(post.tags.unwrap()),
+        Some(post.category.unwrap()),
+        post.created_at,
+        client,
+    )
+    .await
+    {
         Ok(_) => {
             let success_message = Json(json!({"message": "Post added successfully"}));
             Ok(success_message)
         }
         Err(e) => {
-            let error_message = format!("Failed to add post: {}", e);
+            let error_message = format!("Failed to add user: {}", e);
             let error_response = json!({"error": error_message});
             let body = Body::from(serde_json::to_string(&error_response).unwrap());
             Err(Response::builder()
@@ -64,7 +75,7 @@ pub async fn delete_post(
     Path(post_id): Path<i64>,
     Extension(client): Extension<Arc<Client>>,
 ) -> Result<Json<Value>, axum::response::Response> {
-    match Post::delete(client, post_id.try_into().unwrap()).await {
+    match Post::delete(client, post_id.into()).await {
         Ok(_) => {
             let success_message = Json(json!({"message": "Post deleted successfully"}));
             Ok(success_message)
@@ -83,16 +94,16 @@ pub async fn delete_post(
 pub async fn update_post(
     Path(post_id): Path<i64>,
     Extension(client): Extension<Arc<Client>>,
-    title: String,
-    description: String,
-    image: Option<String>,
+    Json(post): Json<Post>,
 ) -> Result<Json<Value>, Response> {
     match Post::update(
         client,
-        post_id.try_into().unwrap(),
-        title,
-        description,
-        image,
+        post_id,
+        post.title,
+        post.body,
+        post.image.unwrap(),
+        post.tags.unwrap(),
+        post.category.unwrap(),
     )
     .await
     {

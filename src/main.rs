@@ -3,12 +3,12 @@ mod db;
 mod handlers;
 mod models;
 mod routes;
-
-use axum::Router;
+use axum::extract::Extension;
 use std::sync::Arc;
 //dotenv is used to load environment variables from a .env file
+use axum::Router;
 use db::establish_connection;
-use routes::{get_post_routes, get_user_routes};
+use routes::{get_misc_routes, get_post_routes, get_user_routes};
 use tokio_postgres::Error; //tokio is the async runtime and tokio-postgres is the async postgres driver //std is the standard library //db is a module that contains the get_db_client function
 
 //MAIN FUNCTION
@@ -18,17 +18,21 @@ async fn main() -> Result<(), Error> {
         .await
         .expect("Failed to connect to database");
 
-    let shared_client = Arc::new(client);
+    let user_client = Arc::new(client);
+    let post_client = user_client.clone();
+    let misc_client = user_client.clone();
+    let layer_client = user_client.clone();
 
     //DEFINE ROUTES
-    let user_routes = get_user_routes(shared_client.clone());
-    let post_routes = get_post_routes(shared_client.clone());
-
-    let app = Router::new().merge(user_routes).merge(post_routes);
-
+    let app = Router::new()
+        .merge(get_user_routes(user_client))
+        .merge(get_post_routes(post_client))
+        .merge(get_misc_routes(misc_client))
+        .layer(Extension(layer_client));
     //START SERVER
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+    println!("Server running on port 3000");
 
     Ok(())
 }

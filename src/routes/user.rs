@@ -11,7 +11,6 @@ use tokio_postgres::Client;
 
 pub fn get_user_routes(client: Arc<Client>) -> Router {
     Router::new()
-        .route("/", get(|| async { "Hello! You've reached the root directory of api.morgan.dev. This is a private api. Go away." }))
         .route("/users", get({
             let client_clone = client.clone(); // Clone for this closure
             move || {
@@ -34,14 +33,14 @@ pub fn get_user_routes(client: Arc<Client>) -> Router {
                 }
             }
         })).route("/users/:id", delete({
-            move |path: axum::extract::Path<i32>, extension: Extension<Arc<Client>>| {
+            move |path: axum::extract::Path<i64>, extension: Extension<Arc<Client>>| {
                 async move {
                     delete_user(path, extension).await
                 }
             }
         })).route("/users/:id", put({
             let client_clone = client.clone(); // Clone for this closure
-            move |path: axum::extract::Path<i32>, Json(user): Json<User>| {
+            move |path: axum::extract::Path<i64>, Json(user): Json<User>| {
                 let extension = Extension(client_clone);
                 let name = user.name.clone();
                 let email = user.email.clone();
@@ -51,8 +50,6 @@ pub fn get_user_routes(client: Arc<Client>) -> Router {
                     update_user(path, extension, name, email, password).await
                 }
             }
-        
-        })).route("/health", get(|| async { "Healthy"
         })).layer(Extension(client))
 }
 
