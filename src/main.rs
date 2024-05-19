@@ -3,8 +3,10 @@ mod db;
 mod handlers;
 mod models;
 mod routes;
-use axum::extract::Extension;
+
+use axum::extract::{Extension, FromRequestParts};
 use std::sync::Arc;
+
 //dotenv is used to load environment variables from a .env file
 use axum::Router;
 use db::establish_connection;
@@ -24,6 +26,7 @@ async fn main() -> Result<(), Error> {
     let layer_client = user_client.clone();
 
     //DEFINE ROUTES
+
     let app = Router::new()
         .merge(get_user_routes(user_client))
         .merge(get_post_routes(post_client))
