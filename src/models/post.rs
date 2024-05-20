@@ -12,7 +12,7 @@ pub struct Post {
     pub image: Option<String>,
     pub tags: Option<Vec<String>>,
     pub category: Option<String>,
-    pub created_at: DateTime<Utc>,
+    pub created_at: Option<DateTime<Utc>>,
 }
 
 impl Post {
@@ -23,7 +23,7 @@ impl Post {
         image: Option<String>,
         tags: Option<Vec<String>>,
         category: Option<String>,
-        created_at: DateTime<Utc>,
+        created_at: Option<DateTime<Utc>>,
         client: Arc<Client>,
     ) -> Result<Self, tokio_postgres::Error> {
         client
@@ -40,7 +40,7 @@ impl Post {
             image: image.clone(),
             tags: tags.clone(),
             category: category.clone(),
-            created_at,
+            created_at: created_at.into(),
         })
     }
 
@@ -91,7 +91,7 @@ impl Post {
                     image: image.clone(),
                     tags: tags.clone(),
                     category: category.clone(),
-                    created_at,
+                    created_at: created_at.into(),
                 }))
             }
             None => Ok(None),
@@ -119,7 +119,7 @@ impl Post {
                 image: image.clone(),
                 tags: tags.clone(),
                 category: category.clone(),
-                created_at,
+                created_at: created_at.into(),
             });
         }
 
@@ -142,7 +142,7 @@ impl Post {
             image: Some(image),
             tags: Some(tags),
             category: Some(category),
-            created_at,
+            created_at: created_at.into(),
         }
     }
 }

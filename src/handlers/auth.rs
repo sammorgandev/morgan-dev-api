@@ -1,8 +1,5 @@
-use std::f32::consts::E;
-
 use axum::http::StatusCode;
 use axum::Json;
-
 use hyper::HeaderMap;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
@@ -73,12 +70,18 @@ pub async fn get_info_handler(header_map: HeaderMap) -> Result<Json<String>, Sta
                     }
                 }
             } else {
+                eprintln!("Failed to decode token: {:?}", auth_header_str);
                 Err(StatusCode::UNAUTHORIZED)
             }
         } else {
+            eprintln!("Failed to decode token: {:?}", auth_header.to_str());
             Err(StatusCode::UNAUTHORIZED)
         }
     } else {
+        eprintln!(
+            "Failed to decode token: {:?}",
+            header_map.get("Authorization")
+        );
         Err(StatusCode::UNAUTHORIZED)
     }
 }

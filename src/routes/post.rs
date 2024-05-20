@@ -1,9 +1,11 @@
 use crate::handlers::{add_post, delete_post, get_all_posts, get_post, update_post};
 use crate::models::Post;
+use axum::body::Body;
 use axum::Extension;
 use axum::{
     routing::{delete, get, post, put},
     Json, Router,
+
 };
 use std::sync::Arc;
 use tokio_postgres::Client;
@@ -21,9 +23,10 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
         }))
         .route("/posts", post({
             let client_clone = client.clone(); // Clone for this closure
-            move |Json(post): Json<Post>| {
+
+            move |req: axum::extract::Request<Body>| {
                 async move {
-                    add_post(Json(post), client_clone.clone()).await // Clone again for the async block if needed
+                    add_post(client_clone, req).await
                 }
             }
         })).route("/posts/:id", get({
@@ -33,17 +36,21 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
                 }
             }
         })).route("/posts/:id", delete({
-            move |path: axum::extract::Path<i64>, extension: Extension<Arc<Client>>| {
+            let client_clone = Extension(client.clone()); // Clone for this closure
+
+            move |req: axum::extract::Request<Body>| {
                 async move {
-                    delete_post(path, extension).await
+                    delete_post(req, client_clone).await
                 }
             }
         })).route("/posts/:id", put({
-            let client_clone = client.clone(); // Clone for this closure
-            move |path: axum::extract::Path<i64>, Json(post): Json<Post>| {
-                let extension = Extension(client_clone);
+            let client_clone_2 = Extension(client.clone()); // Clone for this closure
+
+            move |req: axum::extract::Request<Body>| {
+                
+                let extension = client_clone_2.clone();
                 async move {
-                    update_post(path, extension, Json(post)).await
+                    update_post(req, extension).await
                 }
             }
         
