@@ -4,7 +4,7 @@ mod handlers;
 mod models;
 mod routes;
 
-use axum::extract::{Extension, FromRequestParts};
+use axum::extract::Extension;
 use std::sync::Arc;
 
 //dotenv is used to load environment variables from a .env file

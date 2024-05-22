@@ -19,6 +19,8 @@ pub struct Claims {
     pub sub: String,
     pub exp: usize,
 }
+
+//function to take in a username & password and return an jsonwebtoken.
 pub async fn login_handler(
     Json(login_info): Json<LoginInfo>,
 ) -> Result<Json<LoginResponse>, StatusCode> {
@@ -45,10 +47,12 @@ pub async fn login_handler(
     }
 }
 
+//function to validate a username and password. Right now it just checks for admin / password as static strings.
 pub fn is_valid_user(username: &str, password: &str) -> bool {
     username == "admin" && password == "password"
 }
 
+//function to submit the jsonwebtoken returned from login_handler and validate the authorization bearer token. Returns OK or Err.
 pub async fn get_info_handler(header_map: HeaderMap) -> Result<Json<String>, StatusCode> {
     if let Some(auth_header) = header_map.get("Authorization") {
         if let Ok(auth_header_str) = auth_header.to_str() {
