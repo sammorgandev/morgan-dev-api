@@ -53,7 +53,7 @@ pub fn is_valid_user(username: &str, password: &str) -> bool {
 }
 
 //function to submit the jsonwebtoken returned from login_handler and validate the authorization bearer token. Returns OK or Err.
-pub async fn get_info_handler(header_map: HeaderMap) -> Result<Json<String>, StatusCode> {
+pub async fn auth_handler(header_map: HeaderMap) -> Result<Json<String>, StatusCode> {
     if let Some(auth_header) = header_map.get("Authorization") {
         if let Ok(auth_header_str) = auth_header.to_str() {
             if auth_header_str.starts_with("Bearer ") {

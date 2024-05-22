@@ -1,4 +1,4 @@
-use crate::handlers::{add_post, delete_post, get_all_posts, get_info_handler, get_post, update_post};
+use crate::handlers::{add_post, delete_post, get_all_posts, auth_handler, get_post, update_post};
 use axum::body::Body;
 use axum::response::Response;
 use axum::Extension;
@@ -34,7 +34,7 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
 
             move |req: axum::extract::Request<Body>| {
                 async move {
-                    match get_info_handler(req.headers().clone()).await {
+                    match auth_handler(req.headers().clone()).await {
                         Ok(_) => add_post(client_clone, req).await,
                         Err(_) => Err(Response::builder()
                             .status(StatusCode::UNAUTHORIZED)
@@ -49,7 +49,7 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
 
             move |req: axum::extract::Request<Body>| {
                 async move {
-                    match get_info_handler(req.headers().clone()).await {
+                    match auth_handler(req.headers().clone()).await {
                         Ok(_) => delete_post(req, client_clone).await,
                         Err(_) => Err(Response::builder()
                             .status(StatusCode::UNAUTHORIZED)
@@ -66,7 +66,7 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
                 
                 let extension = client_clone_2.clone();
                 async move {
-                    match get_info_handler(req.headers().clone()).await {
+                    match auth_handler(req.headers().clone()).await {
                         Ok(_) => update_post(req, extension).await,
                         Err(_) => Err(Response::builder()
                             .status(StatusCode::UNAUTHORIZED)
