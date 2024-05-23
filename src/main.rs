@@ -40,6 +40,7 @@ async fn main() -> Result<(), Error> {
         .merge(get_misc_routes(misc_client))
         .layer(Extension(layer_client))
         .layer(cors);
+
     //START SERVER
     let api_port = std::env::var("API_PORT").unwrap_or_else(|_| "3000".to_string());
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", api_port))

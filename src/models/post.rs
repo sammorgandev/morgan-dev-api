@@ -94,8 +94,8 @@ impl Post {
                 let image: Option<String> = row.get(4);
                 let tags: Option<Vec<String>> = row.get(5);
                 let category: Option<String> = row.get(6);
-                let company_name: Option<String> = row.get(7);
-                let company_logo: Option<String> = row.get(8);
+                let company_name: Option<String> = row.get(8);
+                let company_logo: Option<String> = row.get(7);
                 let company_description: Option<String> = row.get(9);
                 let created_at: DateTime<Utc> = row.get(1);
 
@@ -128,8 +128,8 @@ impl Post {
             let image: Option<String> = row.get(4);
             let tags: Option<Vec<String>> = row.get(5);
             let category: Option<String> = row.get(6);
-            let company_name: Option<String> = row.get(7);
-            let company_logo: Option<String> = row.get(8);
+            let company_name: Option<String> = row.get(8);
+            let company_logo: Option<String> = row.get(7);
             let company_description: Option<String> = row.get(9);
             let created_at: DateTime<Utc> = row.get(1);
 
@@ -157,8 +157,8 @@ impl Post {
         let image: String = row.get(4);
         let tags: Vec<String> = row.get(5);
         let category: String = row.get(6);
-        let company_name: String = row.get(7);
-        let company_logo: String = row.get(8);
+        let company_name: String = row.get(8);
+        let company_logo: String = row.get(7);
         let company_description: String = row.get(9);
         let created_at: DateTime<Utc> = row.get(1);
 
