@@ -3,9 +3,10 @@ mod db;
 mod handlers;
 mod models;
 mod routes;
-
 use axum::extract::Extension;
+use hyper::Method;
 use std::sync::Arc;
+use tower_http::cors::{Any, CorsLayer};
 
 //dotenv is used to load environment variables from a .env file
 use axum::Router;
@@ -20,6 +21,12 @@ async fn main() -> Result<(), Error> {
         .await
         .expect("Failed to connect to database");
 
+    let cors = CorsLayer::new()
+        // allow `GET` and `POST` when accessing the resource
+        .allow_methods([Method::GET, Method::POST])
+        // allow requests from any origin
+        .allow_origin(Any);
+
     let user_client = Arc::new(client);
     let post_client = user_client.clone();
     let misc_client = user_client.clone();
@@ -31,7 +38,8 @@ async fn main() -> Result<(), Error> {
         .merge(get_user_routes(user_client))
         .merge(get_post_routes(post_client))
         .merge(get_misc_routes(misc_client))
-        .layer(Extension(layer_client));
+        .layer(Extension(layer_client))
+        .layer(cors);
     //START SERVER
     let api_port = std::env::var("API_PORT").unwrap_or_else(|_| "3000".to_string());
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", api_port))

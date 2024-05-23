@@ -56,6 +56,9 @@ pub async fn add_post(
         Some(post.tags.unwrap_or_else(|| vec![])),
         Some(post.category.unwrap_or_else(|| "".to_string())),
         Some(post.created_at.unwrap_or_else(Utc::now)),
+        Some(post.company_name.unwrap_or_else(|| "".to_string())),
+        Some(post.company_logo.unwrap_or_else(|| "".to_string())),
+        Some(post.company_description.unwrap_or_else(|| "".to_string())),
         client,
     )
     .await
@@ -117,6 +120,9 @@ pub async fn update_post(
         post.image.unwrap(),
         post.tags.unwrap(),
         post.category.unwrap(),
+        post.company_name.unwrap(),
+        post.company_logo.unwrap(),
+        post.company_description.unwrap(),
     )
     .await
     {

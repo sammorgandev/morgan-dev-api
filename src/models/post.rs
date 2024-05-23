@@ -12,6 +12,9 @@ pub struct Post {
     pub image: Option<String>,
     pub tags: Option<Vec<String>>,
     pub category: Option<String>,
+    pub company_name: Option<String>,
+    pub company_logo: Option<String>,
+    pub company_description: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
 }
 
@@ -24,12 +27,15 @@ impl Post {
         tags: Option<Vec<String>>,
         category: Option<String>,
         created_at: Option<DateTime<Utc>>,
+        company_name: Option<String>,
+        company_logo: Option<String>,
+        company_description: Option<String>,
         client: Arc<Client>,
     ) -> Result<Self, tokio_postgres::Error> {
         client
             .execute(
-                "INSERT INTO posts (id, title, body, image, tags, category, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-                &[&id, &title, &body, &image, &tags, &category, &created_at as &(dyn ToSql + Sync)],
+                "INSERT INTO posts (id, title, body, image, tags, category, company_name, company_logo, company_description, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+                &[&id, &title, &body, &image, &tags, &category, &company_name, &company_logo, &company_description, &created_at as &(dyn ToSql + Sync)],
             )
             .await?;
 
@@ -40,6 +46,9 @@ impl Post {
             image: image.clone(),
             tags: tags.clone(),
             category: category.clone(),
+            company_name: company_name.clone(),
+            company_logo: company_logo.clone(),
+            company_description: company_description.clone(),
             created_at: created_at.into(),
         })
     }
@@ -52,11 +61,14 @@ impl Post {
         image: String,
         tags: Vec<String>,
         category: String,
+        company_name: String,
+        company_logo: String,
+        company_description: String,
     ) -> Result<(), tokio_postgres::Error> {
         client
         .execute(
             "UPDATE posts SET title = $1, body = $2, image = $3, tags = $4, category = $6 WHERE id = $5",
-            &[&title, &body, &image, &tags, &id, &category],
+            &[&title, &body, &image, &tags, &id, &category, &company_name, &company_logo, &company_description],
         )
         .await?;
         Ok(())
@@ -82,6 +94,9 @@ impl Post {
                 let image: Option<String> = row.get(4);
                 let tags: Option<Vec<String>> = row.get(5);
                 let category: Option<String> = row.get(6);
+                let company_name: Option<String> = row.get(7);
+                let company_logo: Option<String> = row.get(8);
+                let company_description: Option<String> = row.get(9);
                 let created_at: DateTime<Utc> = row.get(1);
 
                 Ok(Some(Post {
@@ -91,6 +106,9 @@ impl Post {
                     image: image.clone(),
                     tags: tags.clone(),
                     category: category.clone(),
+                    company_name: company_name.clone(),
+                    company_logo: company_logo.clone(),
+                    company_description: company_description.clone(),
                     created_at: created_at.into(),
                 }))
             }
@@ -110,6 +128,9 @@ impl Post {
             let image: Option<String> = row.get(4);
             let tags: Option<Vec<String>> = row.get(5);
             let category: Option<String> = row.get(6);
+            let company_name: Option<String> = row.get(7);
+            let company_logo: Option<String> = row.get(8);
+            let company_description: Option<String> = row.get(9);
             let created_at: DateTime<Utc> = row.get(1);
 
             posts.push(Post {
@@ -119,6 +140,9 @@ impl Post {
                 image: image.clone(),
                 tags: tags.clone(),
                 category: category.clone(),
+                company_name: company_name.clone(),
+                company_logo: company_logo.clone(),
+                company_description: company_description.clone(),
                 created_at: created_at.into(),
             });
         }
@@ -133,6 +157,9 @@ impl Post {
         let image: String = row.get(4);
         let tags: Vec<String> = row.get(5);
         let category: String = row.get(6);
+        let company_name: String = row.get(7);
+        let company_logo: String = row.get(8);
+        let company_description: String = row.get(9);
         let created_at: DateTime<Utc> = row.get(1);
 
         Post {
@@ -142,6 +169,9 @@ impl Post {
             image: Some(image),
             tags: Some(tags),
             category: Some(category),
+            company_name: Some(company_name),
+            company_logo: Some(company_logo),
+            company_description: Some(company_description),
             created_at: created_at.into(),
         }
     }
