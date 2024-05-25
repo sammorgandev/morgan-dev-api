@@ -3,11 +3,12 @@ mod db;
 mod handlers;
 mod models;
 mod routes;
+mod services;
 use axum::extract::Extension;
 use hyper::Method;
+use reqwest::Client;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
-
 //dotenv is used to load environment variables from a .env file
 use axum::Router;
 use db::establish_connection;
@@ -32,6 +33,7 @@ async fn main() -> Result<(), Error> {
     let misc_client = user_client.clone();
     let layer_client = user_client.clone();
 
+    let http_client = Arc::new(Client::new());
     //DEFINE ROUTES
 
     let app = Router::new()
