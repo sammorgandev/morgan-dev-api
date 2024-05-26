@@ -4,14 +4,18 @@ mod models;
 mod routes;
 mod services;
 
-use axum::{extract::Extension, http::HeaderValue, Router};
+use axum::{
+    extract::Extension,
+    http::{HeaderName, HeaderValue},
+    Router,
+};
 use db::establish_connection;
 use hyper::Method;
 use reqwest::Client as HttpClient;
 use routes::{get_misc_routes, get_post_routes, get_service_routes, get_user_routes};
 use std::sync::Arc;
 use tokio_postgres::{Client as DbClient, Error};
-use tower_http::cors::{AllowOrigin, CorsLayer};
+use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 
 //MAIN FUNCTION
 #[tokio::main]
@@ -22,11 +26,11 @@ async fn main() -> Result<(), Error> {
 
     let cors = CorsLayer::new()
         .allow_methods([Method::GET, Method::POST])
-        .allow_origin(AllowOrigin::from(vec![
-            HeaderValue::from_static("https://morgan.dev/*"),
-            HeaderValue::from_static("http://localhost:3000"),
-            HeaderValue::from_static("https://morgan-dev.onrender.com/*"),
-        ]));
+        .allow_headers(vec![
+            HeaderName::from_static("content-type"),
+            HeaderName::from_static("authorization"),
+        ])
+        .allow_origin(Any);
 
     let db_client = Arc::new(postgres_client);
     let http_client = Arc::new(HttpClient::new());
