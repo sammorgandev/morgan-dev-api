@@ -27,7 +27,7 @@ pub async fn login_handler(
     let username = &login_info.username;
     let password = &login_info.password;
     let is_valid = is_valid_user(username, password);
-
+    let secret = std::env::var("API_SECRET").expect("Couldn't find secret variable in .env file");
     if is_valid {
         let claims = Claims {
             sub: username.clone(),
@@ -36,7 +36,7 @@ pub async fn login_handler(
         let token = match encode(
             &Header::default(),
             &claims,
-            &EncodingKey::from_secret("secret".as_ref()),
+            &EncodingKey::from_secret(secret.as_bytes()),
         ) {
             Ok(t) => t,
             Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
@@ -49,7 +49,9 @@ pub async fn login_handler(
 
 //function to validate a username and password. Right now it just checks for admin / password as static strings.
 pub fn is_valid_user(username: &str, password: &str) -> bool {
-    username == "admin" && password == "password"
+    username == std::env::var("API_USERNAME").expect("Couldn't find username variable in .env file")
+        && password
+            == std::env::var("API_PASSWORD").expect("Couldn't find password variable in .env file")
 }
 
 //function to submit the jsonwebtoken returned from login_handler and validate the authorization bearer token. Returns OK or Err.
@@ -58,10 +60,11 @@ pub async fn auth_handler(header_map: HeaderMap) -> Result<Json<String>, StatusC
         if let Ok(auth_header_str) = auth_header.to_str() {
             if auth_header_str.starts_with("Bearer ") {
                 let token = auth_header_str.trim_start_matches("Bearer ").to_string();
-
+                let secret = std::env::var("API_SECRET")
+                    .expect("Couldn't find secret variable in .env file");
                 match decode::<Claims>(
                     &token,
-                    &DecodingKey::from_secret("secret".as_ref()),
+                    &DecodingKey::from_secret(secret.as_bytes()),
                     &Validation::default(),
                 ) {
                     Ok(_) => {

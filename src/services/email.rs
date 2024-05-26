@@ -1,8 +1,13 @@
-use axum::{body::Body, extract::Request, response::Response, Extension, Json};
+use axum::{
+    body::{to_bytes, Body},
+    extract::Request,
+    response::Response,
+    Extension,
+};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use reqwest::Client;
 use serde_json::{json, Value};
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 
 pub async fn create_contact(
     req: Request<Body>,
@@ -34,17 +39,10 @@ pub async fn create_contact(
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(AUTHORIZATION, auth_header_value);
 
-    let data = json!({
-        "email": "<string>",
-        "firstName": "<string>",
-        "lastName": "<string>",
-        "source": "<string>",
-        "subscribed": true,
-        "userGroup": "<string>",
-        "userId": "<string>"
-    });
+    let body = to_bytes(req.into_body(), usize::MAX).await.unwrap();
+    let data: Value = serde_json::from_slice(&body).unwrap();
 
-    let client = reqwest::Client::new();
+    let client = http_client;
     let res = client.post(url).headers(headers).json(&data).send().await;
     let _ = match res {
         Ok(response) => {
