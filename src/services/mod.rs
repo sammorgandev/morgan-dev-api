@@ -1,2 +1,2 @@
 pub mod email;
-pub use email::create_contact;
+pub use email::{contact_form, create_contact};
