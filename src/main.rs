@@ -4,18 +4,14 @@ mod models;
 mod routes;
 mod services;
 
-use axum::{
-    extract::Extension,
-    http::{HeaderName, HeaderValue},
-    Router,
-};
+use axum::{extract::Extension, http::HeaderName, Router};
 use db::establish_connection;
 use hyper::Method;
 use reqwest::Client as HttpClient;
 use routes::{get_misc_routes, get_post_routes, get_service_routes, get_user_routes};
 use std::sync::Arc;
 use tokio_postgres::{Client as DbClient, Error};
-use tower_http::cors::{AllowOrigin, Any, CorsLayer};
+use tower_http::cors::{Any, CorsLayer};
 
 //MAIN FUNCTION
 #[tokio::main]
