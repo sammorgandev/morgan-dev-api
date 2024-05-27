@@ -72,8 +72,8 @@ pub async fn contact_form(
     let data: Value = serde_json::from_slice(&body).unwrap();
 
     let transactional_id = "clwoat3c0000qm6x1htkkwgcb";
-    let first = data["firstName"].as_str().unwrap();
-    let last = data["lastName"].as_str().unwrap();
+    let first = data["first"].as_str().unwrap();
+    let last = data["last"].as_str().unwrap();
     let email = data["email"].as_str().unwrap();
     let message = data["message"].as_str().unwrap();
     let data_variables = json!({
@@ -85,7 +85,7 @@ pub async fn contact_form(
 
     let api_body = json!({
         "transactionalId": transactional_id,
-        "email": email,
+        "email": "sam@morgan.dev",
         "dataVariables": data_variables,
     });
 
