@@ -98,6 +98,7 @@ pub async fn add_post(
         Some(post.company_logo.unwrap_or_else(|| "".to_string())),
         Some(post.company_description.unwrap_or_else(|| "".to_string())),
         post.slug,
+        Some(post.video.unwrap_or_else(|| "".to_string())),
         client,
     )
     .await

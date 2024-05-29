@@ -18,6 +18,7 @@ pub struct Post {
     pub company_description: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
     pub slug: String,
+    pub video: Option<String>,
 }
 
 impl Post {
@@ -33,12 +34,13 @@ impl Post {
         company_logo: Option<String>,
         company_description: Option<String>,
         slug: String,
+        video: Option<String>,
         client: Arc<Client>,
     ) -> Result<Self, tokio_postgres::Error> {
         client
             .execute(
-                "INSERT INTO posts (id, title, body, image, tags, category, company_name, company_logo, company_description, created_at, slug) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
-                &[&id, &title, &body, &image, &tags, &category, &company_name, &company_logo, &company_description, &created_at, &slug as &(dyn ToSql + Sync)],
+                "INSERT INTO posts (id, title, body, image, tags, category, company_name, company_logo, company_description, created_at, slug, video) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+                &[&id, &title, &body, &image, &tags, &category, &company_name, &company_logo, &company_description, &created_at, &slug, &video as &(dyn ToSql + Sync)],
             )
             .await?;
 
@@ -54,6 +56,7 @@ impl Post {
             company_description: company_description.clone(),
             created_at: created_at.into(),
             slug: slug.into(),
+            video: video.clone(),
         })
     }
 
@@ -107,6 +110,7 @@ impl Post {
                 let company_description: Option<String> = row.get(9);
                 let created_at: DateTime<Utc> = row.get(1);
                 let slug: String = row.get(10);
+                let video: Option<String> = row.get(11);
 
                 Ok(Some(Post {
                     id,
@@ -120,6 +124,7 @@ impl Post {
                     company_description: company_description.clone(),
                     created_at: created_at.into(),
                     slug: slug.into(),
+                    video: video.clone(),
                 }))
             }
             None => Ok(None),
@@ -152,6 +157,7 @@ impl Post {
             let company_description: Option<String> = row.get(9);
             let created_at: DateTime<Utc> = row.get(1);
             let slug: String = row.get(10);
+            let video: Option<String> = row.get(11);
 
             posts.push(Post {
                 id,
@@ -165,6 +171,7 @@ impl Post {
                 company_description: company_description.clone(),
                 created_at: created_at.into(),
                 slug: slug.into(),
+                video: video.clone(),
             });
         }
 
@@ -193,6 +200,7 @@ impl Post {
             let company_description: Option<String> = row.get(9);
             let created_at: DateTime<Utc> = row.get(1);
             let slug: String = row.get(10);
+            let video: Option<String> = row.get(11);
 
             posts.push(Post {
                 id,
@@ -206,6 +214,7 @@ impl Post {
                 company_description: company_description.clone(),
                 created_at: created_at.into(),
                 slug: slug.into(),
+                video: video.clone(),
             });
         }
 
@@ -229,6 +238,7 @@ impl Post {
             let company_description: Option<String> = row.get(9);
             let created_at: DateTime<Utc> = row.get(1);
             let slug: String = row.get(10);
+            let video: Option<String> = row.get(11);
 
             posts.push(Post {
                 id,
@@ -242,6 +252,7 @@ impl Post {
                 company_description: company_description.clone(),
                 created_at: created_at.into(),
                 slug: slug.into(),
+                video: video.clone(),
             });
         }
 
@@ -260,6 +271,7 @@ impl Post {
         let company_description: String = row.get(9);
         let created_at: DateTime<Utc> = row.get(1);
         let slug: String = row.get(10);
+        let video: String = row.get(11);
 
         Post {
             id,
@@ -273,6 +285,7 @@ impl Post {
             company_description: Some(company_description),
             created_at: created_at.into(),
             slug: slug.into(),
+            video: Some(video),
         }
     }
 }
