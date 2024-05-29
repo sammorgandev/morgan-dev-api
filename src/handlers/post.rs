@@ -30,11 +30,49 @@ pub async fn get_all_posts(client: Arc<Client>) -> Result<Json<Value>, Response>
     }
 }
 
+pub async fn get_posts_by_category(
+    client: Extension<Arc<Client>>,
+    category: String,
+) -> Result<Json<Value>, Response> {
+    let result = Post::get_category(client, category).await;
+    match result {
+        Ok(posts) => Ok(Json(json!({ "posts": posts }))),
+        Err(e) => {
+            let error_message = format!("Failed to fetch posts: {}", e);
+            let error_response = json!({"error": error_message});
+            let body = Body::from(serde_json::to_string(&error_response).unwrap());
+            Err(Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(body)
+                .unwrap())
+        }
+    }
+}
+
+pub async fn get_posts_by_tag(
+    client: Extension<Arc<Client>>,
+    tag: String,
+) -> Result<Json<Value>, Response> {
+    let result = Post::get_tag(client, tag).await;
+    match result {
+        Ok(posts) => Ok(Json(json!({ "posts": posts }))),
+        Err(e) => {
+            let error_message = format!("Failed to fetch posts: {}", e);
+            let error_response = json!({"error": error_message});
+            let body = Body::from(serde_json::to_string(&error_response).unwrap());
+            Err(Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(body)
+                .unwrap())
+        }
+    }
+}
+
 pub async fn get_post(
-    Path(post_id): Path<i64>,
+    Path(post_slug): Path<String>,
     Extension(client): Extension<Arc<Client>>,
 ) -> Result<Json<Post>, StatusCode> {
-    match Post::get(client, post_id).await {
+    match Post::get(client, post_slug).await {
         Ok(Some(post)) => Ok(Json(post)),
         Ok(None) => Err(StatusCode::NOT_FOUND),
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
@@ -59,6 +97,7 @@ pub async fn add_post(
         Some(post.company_name.unwrap_or_else(|| "".to_string())),
         Some(post.company_logo.unwrap_or_else(|| "".to_string())),
         Some(post.company_description.unwrap_or_else(|| "".to_string())),
+        post.slug,
         client,
     )
     .await
@@ -123,6 +162,7 @@ pub async fn update_post(
         post.company_name.unwrap(),
         post.company_logo.unwrap(),
         post.company_description.unwrap(),
+        post.slug,
     )
     .await
     {

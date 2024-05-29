@@ -1,4 +1,4 @@
-use crate::handlers::{add_post, delete_post, get_all_posts, auth_handler, get_post, update_post};
+use crate::handlers::{add_post, delete_post, get_all_posts, auth_handler, get_post, update_post, get_posts_by_category, get_posts_by_tag};
 use axum::body::Body;
 use axum::response::Response;
 use axum::Extension;
@@ -22,13 +22,28 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
                 }
             }
         }))
-        .route("/posts/:id", get({
-            move |path: axum::extract::Path<i64>, extension: Extension<Arc<Client>>| {
+        .route("/posts/category/:category_slug", get({
+            move |path: axum::extract::Path<String>, extension: Extension<Arc<Client>>| {
+                async move {
+                    get_posts_by_category(extension, path.to_string()).await
+                }
+            }
+        }))
+        .route("/posts/tag/:tag_slug", get({
+            move |path: axum::extract::Path<String>, extension: Extension<Arc<Client>>| {
+                async move {
+                    get_posts_by_tag(extension, path.to_string()).await
+                }
+            }
+        }))
+        .route("/posts/:slug", get({
+            move |path: axum::extract::Path<String>, extension: Extension<Arc<Client>>| {
                 async move {
                     get_post(path, extension).await
                 }
             }
         }))
+       
         .route("/posts", post({
             let client_clone = client.clone(); // Clone for this closure
 
@@ -44,7 +59,7 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
                 }
             }
         }))
-        .route("/posts/:id", delete({
+        .route("/posts/:slug", delete({
             let client_clone = Extension(client.clone()); // Clone for this closure
 
             move |req: axum::extract::Request<Body>| {
@@ -59,7 +74,7 @@ pub fn get_post_routes(client: Arc<Client>) -> Router {
                 }
             }
         }))
-        .route("/posts/:id", put({
+        .route("/posts/:slug", put({
             let client_clone_2 = Extension(client.clone()); // Clone for this closure
 
             move |req: axum::extract::Request<Body>| {

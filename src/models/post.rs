@@ -1,3 +1,4 @@
+use axum::Extension;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -16,6 +17,7 @@ pub struct Post {
     pub company_logo: Option<String>,
     pub company_description: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
+    pub slug: String,
 }
 
 impl Post {
@@ -30,12 +32,13 @@ impl Post {
         company_name: Option<String>,
         company_logo: Option<String>,
         company_description: Option<String>,
+        slug: String,
         client: Arc<Client>,
     ) -> Result<Self, tokio_postgres::Error> {
         client
             .execute(
-                "INSERT INTO posts (id, title, body, image, tags, category, company_name, company_logo, company_description, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-                &[&id, &title, &body, &image, &tags, &category, &company_name, &company_logo, &company_description, &created_at as &(dyn ToSql + Sync)],
+                "INSERT INTO posts (id, title, body, image, tags, category, company_name, company_logo, company_description, created_at, slug) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+                &[&id, &title, &body, &image, &tags, &category, &company_name, &company_logo, &company_description, &created_at, &slug as &(dyn ToSql + Sync)],
             )
             .await?;
 
@@ -50,6 +53,7 @@ impl Post {
             company_logo: company_logo.clone(),
             company_description: company_description.clone(),
             created_at: created_at.into(),
+            slug: slug.into(),
         })
     }
 
@@ -64,11 +68,12 @@ impl Post {
         company_name: String,
         company_logo: String,
         company_description: String,
+        slug: String,
     ) -> Result<(), tokio_postgres::Error> {
         client
         .execute(
             "UPDATE posts SET title = $1, body = $2, image = $3, tags = $4, category = $6 WHERE id = $5",
-            &[&title, &body, &image, &tags, &id, &category, &company_name, &company_logo, &company_description],
+            &[&title, &body, &image, &tags, &id, &category, &company_name, &company_logo, &company_description, &slug],
         )
         .await?;
         Ok(())
@@ -81,9 +86,12 @@ impl Post {
         Ok(())
     }
 
-    pub async fn get(client: Arc<Client>, id: i64) -> Result<Option<Post>, tokio_postgres::Error> {
+    pub async fn get(
+        client: Arc<Client>,
+        slug: String,
+    ) -> Result<Option<Post>, tokio_postgres::Error> {
         let row = client
-            .query_opt("SELECT * FROM posts WHERE id = $1", &[&id])
+            .query_opt("SELECT * FROM posts WHERE slug = $1", &[&slug])
             .await?;
 
         match row {
@@ -98,6 +106,7 @@ impl Post {
                 let company_logo: Option<String> = row.get(7);
                 let company_description: Option<String> = row.get(9);
                 let created_at: DateTime<Utc> = row.get(1);
+                let slug: String = row.get(10);
 
                 Ok(Some(Post {
                     id,
@@ -110,10 +119,97 @@ impl Post {
                     company_logo: company_logo.clone(),
                     company_description: company_description.clone(),
                     created_at: created_at.into(),
+                    slug: slug.into(),
                 }))
             }
             None => Ok(None),
         }
+    }
+
+    pub async fn get_category(
+        client: Extension<Arc<Client>>,
+        category: String,
+    ) -> Result<Vec<Post>, tokio_postgres::Error> {
+        let parsed_category = category.replace("-", " ");
+        let rows = client
+            .query(
+                "SELECT * FROM posts WHERE category = $1",
+                &[&parsed_category],
+            )
+            .await?;
+
+        let mut posts = Vec::new();
+
+        for row in rows {
+            let id: i64 = row.get(0);
+            let title: String = row.get(2);
+            let body: String = row.get(3);
+            let image: Option<String> = row.get(4);
+            let tags: Option<Vec<String>> = row.get(5);
+            let category: Option<String> = row.get(6);
+            let company_name: Option<String> = row.get(8);
+            let company_logo: Option<String> = row.get(7);
+            let company_description: Option<String> = row.get(9);
+            let created_at: DateTime<Utc> = row.get(1);
+            let slug: String = row.get(10);
+
+            posts.push(Post {
+                id,
+                title,
+                body,
+                image: image.clone(),
+                tags: tags.clone(),
+                category: category.clone(),
+                company_name: company_name.clone(),
+                company_logo: company_logo.clone(),
+                company_description: company_description.clone(),
+                created_at: created_at.into(),
+                slug: slug.into(),
+            });
+        }
+
+        Ok(posts)
+    }
+
+    pub async fn get_tag(
+        client: Extension<Arc<Client>>,
+        tag: String,
+    ) -> Result<Vec<Post>, tokio_postgres::Error> {
+        let rows = client
+            .query("SELECT * FROM posts WHERE $1 = ANY(tags)", &[&tag])
+            .await?;
+
+        let mut posts = Vec::new();
+
+        for row in rows {
+            let id: i64 = row.get(0);
+            let title: String = row.get(2);
+            let body: String = row.get(3);
+            let image: Option<String> = row.get(4);
+            let tags: Option<Vec<String>> = row.get(5);
+            let category: Option<String> = row.get(6);
+            let company_name: Option<String> = row.get(8);
+            let company_logo: Option<String> = row.get(7);
+            let company_description: Option<String> = row.get(9);
+            let created_at: DateTime<Utc> = row.get(1);
+            let slug: String = row.get(10);
+
+            posts.push(Post {
+                id,
+                title,
+                body,
+                image: image.clone(),
+                tags: tags.clone(),
+                category: category.clone(),
+                company_name: company_name.clone(),
+                company_logo: company_logo.clone(),
+                company_description: company_description.clone(),
+                created_at: created_at.into(),
+                slug: slug.into(),
+            });
+        }
+
+        Ok(posts)
     }
 
     pub async fn get_all(client: Arc<Client>) -> Result<Vec<Post>, tokio_postgres::Error> {
@@ -132,6 +228,7 @@ impl Post {
             let company_logo: Option<String> = row.get(7);
             let company_description: Option<String> = row.get(9);
             let created_at: DateTime<Utc> = row.get(1);
+            let slug: String = row.get(10);
 
             posts.push(Post {
                 id,
@@ -144,6 +241,7 @@ impl Post {
                 company_logo: company_logo.clone(),
                 company_description: company_description.clone(),
                 created_at: created_at.into(),
+                slug: slug.into(),
             });
         }
 
@@ -161,6 +259,7 @@ impl Post {
         let company_logo: String = row.get(7);
         let company_description: String = row.get(9);
         let created_at: DateTime<Utc> = row.get(1);
+        let slug: String = row.get(10);
 
         Post {
             id,
@@ -173,6 +272,7 @@ impl Post {
             company_logo: Some(company_logo),
             company_description: Some(company_description),
             created_at: created_at.into(),
+            slug: slug.into(),
         }
     }
 }
