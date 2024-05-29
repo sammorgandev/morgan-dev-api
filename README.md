@@ -41,13 +41,13 @@ This project is an API written in Rust. It is designed to be efficient and scala
 2. **Install Dependencies**
    Ensure you have Rust installed. If not, install it from rust-lang.org.
 
-   ```sh
+   ```
    cargo build
    ```
 
 3. **Set up PostgreSql**
    You can use Docker to set up a PostgreSQL instance:
-   ```sh
+   ```
    docker run --name postgres -e POSTGRES_PASSWORD=yourpassword -d -p 5432:5432 postgres
    ```
 
@@ -55,7 +55,7 @@ This project is an API written in Rust. It is designed to be efficient and scala
 
 Update the .env file with your database credentials and other configuration details:
 
-    ```env
+    ```
     POSTGRES_USER=your database user
     POSTGRES_PASSWORD=your database password
     POSTGRES_DB=your database name
@@ -85,7 +85,7 @@ The server will start on http://localhost:8080. You can change the port in your 
 
 This project is licensed under the MIT License.
 
-    ```license
+    ```
     Copyright 2024 MORGAN/DEV
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
