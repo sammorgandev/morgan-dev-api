@@ -24,7 +24,6 @@ pub struct Input {
 
 pub async fn chat_completion(client: Arc<Client>, data: Request<Body>) -> Result<String, Error> {
     dotenv::dotenv().ok();
-    let client = Client::new();
     let mut headers = HeaderMap::new();
     headers.insert(
         AUTHORIZATION,
@@ -32,15 +31,9 @@ pub async fn chat_completion(client: Arc<Client>, data: Request<Body>) -> Result
     );
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     let data = to_bytes(data.into_body(), usize::MAX).await;
-    let data = match data {
-        Ok(data) => data,
-        Err(err) => err.to_string().into(),
-    };
+    let data = data.unwrap_or_else(|err| err.to_string().into());
     let data: Result<serde_json::Value, _> = serde_json::from_slice(data.as_ref());
-    let data = match data {
-        Ok(data) => data,
-        Err(err) => err.to_string().into(),
-    };
+    let data = data.unwrap_or_else(|err| err.to_string().into());
     let body = json!(data); // Use data instead of body
 
     let res = client

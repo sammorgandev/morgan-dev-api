@@ -1,10 +1,10 @@
 use crate::handlers::auth::auth_handler;
-use crate::handlers::chat::{chat_completion, RequestBody};
 use crate::services::{contact_form, create_contact};
 use axum::{body::Body, response::Response, routing::post, Extension, Router};
 use hyper::StatusCode;
 use reqwest::Client;
 use std::sync::Arc;
+use crate::handlers::chat::chat_completion;
 
 pub fn get_service_routes(client: Arc<Client>) -> Router {
     Router::new()

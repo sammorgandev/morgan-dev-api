@@ -1,17 +1,18 @@
-use crate::models::Post;
+use std::sync::Arc;
+
 use axum::{
     //axum is the http server framework
-    body::{to_bytes, Body},
+    body::{Body, to_bytes},
+    Extension,
     extract::{Json, Path, Request},
     http::StatusCode,
     response::Response,
-    Extension,
 };
-
 use chrono::Utc;
 use serde_json::{from_slice, json, Value};
-use std::sync::Arc;
 use tokio_postgres::Client;
+
+use crate::models::Post;
 
 //CUSTOM HANDLERS
 pub async fn get_all_posts(client: Arc<Client>) -> Result<Json<Value>, Response> {
@@ -86,23 +87,7 @@ pub async fn add_post(
     let body_bytes = to_bytes(req.into_body(), usize::MAX).await.unwrap();
     let post: Post = from_slice(&body_bytes).unwrap();
 
-    match Post::new(
-        post.id,
-        post.title,
-        post.body,
-        Some(post.image.unwrap_or_else(|| "".to_string())),
-        Some(post.tags.unwrap_or_else(|| vec![])),
-        Some(post.category.unwrap_or_else(|| "".to_string())),
-        Some(post.created_at.unwrap_or_else(Utc::now)),
-        Some(post.company_name.unwrap_or_else(|| "".to_string())),
-        Some(post.company_logo.unwrap_or_else(|| "".to_string())),
-        Some(post.company_description.unwrap_or_else(|| "".to_string())),
-        post.slug,
-        Some(post.video.unwrap_or_else(|| "".to_string())),
-        client,
-    )
-    .await
-    {
+    match Post::new(post, client).await {
         Ok(_) => {
             let success_message = Json(json!({"message": "Post added successfully"}));
             Ok(success_message)
@@ -152,21 +137,7 @@ pub async fn update_post(
     let post: Post = from_slice(&body_bytes).unwrap();
     let post_id = post.id;
 
-    match Post::update(
-        client,
-        post_id,
-        post.title,
-        post.body,
-        post.image.unwrap(),
-        post.tags.unwrap(),
-        post.category.unwrap(),
-        post.company_name.unwrap(),
-        post.company_logo.unwrap(),
-        post.company_description.unwrap(),
-        post.slug,
-    )
-    .await
-    {
+    match Post::update(client, post).await {
         Ok(_) => {
             let success_message = Json(json!({"message": "Post updated successfully"}));
             Ok(success_message)
